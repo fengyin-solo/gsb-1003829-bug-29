@@ -1,6 +1,29 @@
 import { MODULE_BY_KEY } from '@/data/modules'
+import {
+  beginDiaryReview,
+  cancelDiaryReview,
+  dismissDiaryConflict,
+  listDiaryDrafts,
+  recoverDiaryReviews,
+  saveDiaryDraft,
+  submitDiaryForReview,
+  submitDiaryReview,
+} from '@/data/diary-review'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
+
+// 发掘日记的审核是事务化流程（草稿暂存、写回续做、并发裁决都在数据层），
+// 页面统一经这一层调用，不直接触碰通用 runAction。
+export {
+  beginDiaryReview,
+  cancelDiaryReview,
+  dismissDiaryConflict,
+  listDiaryDrafts,
+  recoverDiaryReviews,
+  saveDiaryDraft,
+  submitDiaryForReview,
+  submitDiaryReview,
+}
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
 const NEGATIVE_ACTIONS = ['撤销', '作废', '拒绝', '驳回', '停用', '忽略', '下线', '回滚']

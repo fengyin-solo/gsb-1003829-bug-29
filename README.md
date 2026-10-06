@@ -68,4 +68,24 @@ npm run build
 - 字段、状态、动作与流转目标集中在 `frontend/src/data/modules.ts`；示例数据在
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
-- 想回到初始数据：清掉浏览器里 `field-archaeology-digital:entries` 这一项，或调用 `resetModule(模块)`。
+- 发掘日记的审核是事务化流程（`src/data/diary-review.ts`）：
+  - 提交后进入「待审核」；确认审核必须填主要发现，退回补充必须填退回理由，空白不会写成已审核。
+  - 审核意图作为草稿单独持久化（`localStorage` 的 `...:diary-review-drafts`），与业务表分开；
+    写回采用「先暂存意图、再带版本号 CAS 写回、成功后清理草稿」两段式事务。写盘断线后再次进入页面，
+    会自动从断点继续完成，已填内容与原审核人都保留，未提交的填写中草稿不被覆盖。
+  - 同一日记被并发确认/退回时，只有一个动作落盘，失败方进入明确的冲突状态（行内冲突标记 +
+    冲突草稿），需人工「解除冲突」，不会出现后写静默覆盖先写。
+- 业务表持久化结构带 `version`（每次写自增），读盘时逐模块校验，写坏/空白的模块只回退该模块种子，
+  不再因一份残缺数据显示空白列表；不再使用长生命周期内存缓存，跨标签页/跨页面能读到对方写入。
+- 想回到初始数据：清掉浏览器里 `field-archaeology-digital:entries`（审核草稿另在
+  `field-archaeology-digital:diary-review-drafts`）这一项，或调用 `resetModule(模块)`。
+
+## 测试
+
+```bash
+cd frontend
+npm test
+```
+
+纯 Node 行为测试（经 `tests/ts-loader.mjs` 即时转译 TS），覆盖审核事务续做、空白拦截、
+写盘断线、并发冲突裁决，以及持久化层的残缺数据回退/旧格式迁移/版本号 CAS。
