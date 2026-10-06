@@ -5,7 +5,9 @@ export type EntryRow = {
   status: string
   pending: boolean
   abnormal: boolean
-  [field: string]: string | number | boolean
+  // 乐观锁版本号：审核事务提交时据此判断日记是否已被别人改动。旧数据没有版本，按 0 处理。
+  _version?: number
+  [field: string]: string | number | boolean | undefined
 }
 
 export type ModuleMeta = {
